@@ -15,7 +15,7 @@ version <next>:
 - crystalizer audio filter
 - acrusher audio filter
 - bitplanenoise video filter
-- V4L2 mem2mem HW accelerated codecs support
+- V4L2 mem2mem HW accelerated codecs and filters support
 - floating point support in als decoder
 - fifo muxer
 - maskedclamp filter

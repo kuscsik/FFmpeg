@@ -193,6 +193,7 @@ OBJS-$(CONFIG_HISTOGRAM_FILTER)              += vf_histogram.o
 OBJS-$(CONFIG_HQDN3D_FILTER)                 += vf_hqdn3d.o
 OBJS-$(CONFIG_HQX_FILTER)                    += vf_hqx.o
 OBJS-$(CONFIG_HSTACK_FILTER)                 += vf_stack.o framesync.o
+OBJS-$(CONFIG_V4L2_M2M_FILTER)               += vf_v4l2_m2m.o
 OBJS-$(CONFIG_HUE_FILTER)                    += vf_hue.o
 OBJS-$(CONFIG_HWDOWNLOAD_FILTER)             += vf_hwdownload.o
 OBJS-$(CONFIG_HWUPLOAD_CUDA_FILTER)          += vf_hwupload_cuda.o

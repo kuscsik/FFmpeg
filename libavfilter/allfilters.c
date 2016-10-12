@@ -208,6 +208,7 @@ void avfilter_register_all(void)
     REGISTER_FILTER(HISTEQ,         histeq,         vf);
     REGISTER_FILTER(HISTOGRAM,      histogram,      vf);
     REGISTER_FILTER(HQDN3D,         hqdn3d,         vf);
+    REGISTER_FILTER(V4L2_M2M,       v4l2_m2m,       vf);
     REGISTER_FILTER(HQX,            hqx,            vf);
     REGISTER_FILTER(HSTACK,         hstack,         vf);
     REGISTER_FILTER(HUE,            hue,            vf);
