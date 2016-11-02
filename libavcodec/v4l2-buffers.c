@@ -34,7 +34,7 @@
 #define IS_BP_SUPPORTED(bp) ((bp->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) || (bp->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) || (bp->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) || (bp->type == V4L2_BUF_TYPE_VIDEO_OUTPUT))
 
 // Define it if you want more AV_LOG_DEBUG output
-// #define V4L_BUFFER_DEBUG
+#define V4L_BUFFER_DEBUG
 
 /*
  * Missing features:

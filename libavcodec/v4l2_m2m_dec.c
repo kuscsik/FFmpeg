@@ -34,15 +34,18 @@
 #include "v4l2_m2m.h"
 #include "v4l2_m2m_avcodec.h"
 #include "v4l2-common.h"
-
-
 #include "libavutil/opt.h"
 
 static int try_start(AVCodecContext *avctx) {
     struct v4l2_control ctrl;
     struct v4l2_crop crop;
+    struct v4l2_cropcap cropcap;
     int ret;
+    int cropcap_supported = 1;
     V4Lm2mContext *s = avctx->priv_data;
+    memset (&cropcap, 0, sizeof (cropcap));
+
+    cropcap.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
 
     if(!s->output_pool.streamon && (ret = avpriv_set_stream_status(&s->output_pool, VIDIOC_STREAMON) < 0)) {
         av_log(avctx, AV_LOG_ERROR, "VIDIOC_STREAMON failed on input pool\n");
@@ -50,23 +53,41 @@ static int try_start(AVCodecContext *avctx) {
     }
 
     s->capture_pool.format.type = s->capture_pool.type;
+
+    if ( ret = ioctl (s->fd, VIDIOC_CROPCAP, &cropcap) ) {
+        av_log(avctx, AV_LOG_ERROR, "Calling VIDIOC_CROPCAP ioctl failed\n");
+        cropcap_supported = 0;
+    }
+
     if(ret = ioctl(s->fd, VIDIOC_G_FMT, &s->capture_pool.format)) {
         av_log(avctx, AV_LOG_WARNING, "Failed to get output format\n");
         return ret;
     }
 
     crop.type = s->capture_pool.type;
-    if(ret = ioctl(s->fd, VIDIOC_G_CROP, &crop)) {
-        av_log(avctx, AV_LOG_WARNING, "Failed to get cropping information\n");
-        return ret;
-    }
+
 
     s->capture_pool.width      = avctx->width   = s->capture_pool.format.fmt.pix_mp.width;
     s->capture_pool.height     = avctx->height  = s->capture_pool.format.fmt.pix_mp.height;
     s->capture_pool.av_pix_fmt = avctx->pix_fmt = avpriv_v4l_fmt_v4l2ff(s->capture_pool.format.fmt.pix_mp.pixelformat, AV_CODEC_ID_RAWVIDEO);
 
-    avctx->coded_width  = crop.c.width;
-    avctx->coded_height = crop.c.height;
+    if(ret = ioctl(s->fd, VIDIOC_G_CROP, &crop)) {
+        av_log(avctx, AV_LOG_WARNING, "Failed to get cropping information. Using default size. \n");
+
+        if (cropcap_supported) {
+            avctx->coded_width  = cropcap.defrect.width;
+            avctx->coded_height = cropcap.defrect.height;
+        } else {
+            /* No crop information, using widht, height obtained from the format */
+            avctx->coded_width  = s->capture_pool.format.fmt.pix_mp.width;
+            avctx->coded_height = s->capture_pool.format.fmt.pix_mp.height;
+        }
+    } else {
+        /* VIDIOC_G_CROP success, use the obtained crop information */
+        avctx->coded_width  = crop.c.width;
+        avctx->coded_height = crop.c.height;
+    }
+
 
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
     if(ret = ioctl(s->fd, VIDIOC_G_CTRL, &ctrl)) {
