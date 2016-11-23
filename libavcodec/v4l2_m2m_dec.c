@@ -66,7 +66,6 @@ static int try_start(AVCodecContext *avctx) {
 
     crop.type = s->capture_pool.type;
 
-
     s->capture_pool.width      = avctx->width   = s->capture_pool.format.fmt.pix_mp.width;
     s->capture_pool.height     = avctx->height  = s->capture_pool.format.fmt.pix_mp.height;
     s->capture_pool.av_pix_fmt = avctx->pix_fmt = avpriv_v4l_fmt_v4l2ff(s->capture_pool.format.fmt.pix_mp.pixelformat, AV_CODEC_ID_RAWVIDEO);
@@ -91,12 +90,11 @@ static int try_start(AVCodecContext *avctx) {
 
     ctrl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
     if(ret = ioctl(s->fd, VIDIOC_G_CTRL, &ctrl)) {
-        av_log(avctx, AV_LOG_WARNING, "Failed to get minimum input packets for decoding\n");
-        return ret;
+        av_log(avctx, AV_LOG_WARNING, "Failed to get minimum input packets for decoding. Assuming minimum 4 buffer in queued buffers\n");
+          s->capture_pool.min_queued_buffers  = 4;
+    } else {
+          s->capture_pool.min_queued_buffers = ctrl.value;
     }
-
-    s->capture_pool.min_queued_buffers = ctrl.value;
-
     /* Init capture pool after starting output pool */
     if(!s->capture_pool.buffers && (ret = avpriv_init_v4lbufpool(&(s->capture_pool)))) {
         av_log(avctx, AV_LOG_ERROR, "Failed to request output buffers\n");
