@@ -123,7 +123,21 @@ static V4LBuffer* dequeue_v4lbuf(V4LBufferPool *bp) {
     }
 
     if(bp->blocking_dequeue) {
-        struct pollfd pfd = { .fd = bp->fd, .events = POLLIN | POLLERR };
+
+        struct pollfd pfd;
+        pfd.fd = bp->fd;
+        switch (bp->type) {
+            case V4L2_BUF_TYPE_VIDEO_CAPTURE:
+            case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
+                pfd.events = POLLIN | POLLERR;            break;
+            case V4L2_BUF_TYPE_VIDEO_OUTPUT:
+            case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+                pfd.events = POLLOUT | POLLERR | POLLWRNORM;
+            break;
+            default:
+                 pfd.events = POLLIN | POLLERR | POLLRDNORM;
+        }
+
         av_log(bp->log_ctx, AV_LOG_DEBUG, "Waiting for event for %i msec before dequeuing on %s\n", bp->blocking_dequeue, bp->name);
         if((ret = poll(&pfd, 1, bp->blocking_dequeue)) <= 0) {
             av_log(bp->log_ctx, AV_LOG_WARNING, "No event occurred while waiting\n");
